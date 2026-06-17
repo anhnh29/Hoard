@@ -5,9 +5,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [PrismaModule, ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }])],
+  imports: [PrismaModule, ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]), UsersModule],
   controllers: [AppController, HealthController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
