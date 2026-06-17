@@ -73,3 +73,13 @@ bun run preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+## Deployment setup (one-time, manual)
+
+1. Create a Neon Postgres project at https://neon.tech, copy its connection string.
+2. Create a Railway project, link this GitHub repo, set root directory to `apps/api`,
+   and set the `DATABASE_URL` env var to the Neon connection string.
+3. Run `pnpm --filter @hoard/api exec prisma migrate deploy` against the Neon database
+   once before the first deploy (and after every schema change).
+4. Create a Vercel project, link this GitHub repo, set root directory to `apps/web`,
+   and set `NUXT_PUBLIC_API_BASE` to the Railway-deployed API URL.
