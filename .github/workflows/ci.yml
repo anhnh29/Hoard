@@ -9,7 +9,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: 'postgresql://hoard:hoard@localhost:5432/hoard_dev?schema=public'
+      # No live Postgres in CI — only `prisma generate` (schema-only) runs here,
+      # so this value just needs to be present, not reachable. Matches local
+      # dev's port (see docker-compose.yml) for consistency, not correctness.
+      DATABASE_URL: 'postgresql://hoard:hoard@localhost:5434/hoard_dev?schema=public'
     steps:
       - uses: actions/checkout@v4
 
