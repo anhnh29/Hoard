@@ -27,3 +27,6 @@ logs
 
 # Git worktrees used for isolated implementation sessions
 .worktrees
+
+# Turborepo cache
+.turbo
