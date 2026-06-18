@@ -15,6 +15,7 @@ describe('Users (e2e)', () => {
   beforeAll(async () => {
     process.env.JWT_ACCESS_SECRET ??= 'test-access-secret';
     process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret';
+    process.env.CLOUDINARY_URL = 'cloudinary://test-key:test-secret@test-cloud';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -72,5 +73,22 @@ describe('Users (e2e)', () => {
       .expect(200);
 
     expect(res.body.avatarUrl).toBe('https://res.cloudinary.com/demo/image/upload/v1/avatar.png');
+  });
+
+  it('GET /users/me/avatar-upload-signature returns signed Cloudinary upload params', async () => {
+    await request(app.getHttpServer()).get('/users/me/avatar-upload-signature').expect(401);
+
+    const res = await request(app.getHttpServer())
+      .get('/users/me/avatar-upload-signature')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      timestamp: expect.any(Number),
+      signature: expect.any(String),
+      apiKey: 'test-key',
+      cloudName: 'test-cloud',
+      folder: 'avatars',
+    });
   });
 });
