@@ -12,7 +12,9 @@
   },
   "dependencies": {
     "@hoard/shared": "workspace:*",
+    "@pinia/nuxt": "^0.11.3",
     "nuxt": "^4.4.8",
+    "pinia": "^3.0.4",
     "vue": "^3.5.35",
     "vue-router": "^5.1.0"
   },
