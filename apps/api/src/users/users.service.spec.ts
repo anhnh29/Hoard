@@ -31,6 +31,15 @@ describe('UsersService', () => {
     expect(result.id).toBe('1');
   });
 
+  it('create() allows a null passwordHash (for Google-originated accounts)', async () => {
+    const input = { email: 'a@b.com', passwordHash: null, name: 'Alice', username: 'alice' };
+    prismaMock.user.create.mockResolvedValue({ id: '1', ...input });
+
+    await service.create(input);
+
+    expect(prismaMock.user.create).toHaveBeenCalledWith({ data: input });
+  });
+
   it('findByEmail() looks up by email', async () => {
     prismaMock.user.findUnique.mockResolvedValue(null);
     const result = await service.findByEmail('missing@b.com');
@@ -74,6 +83,26 @@ describe('UsersService', () => {
     expect(prismaMock.user.update).toHaveBeenCalledWith({
       where: { id: '1' },
       data: { hashedRefreshToken: 'hashed-token' },
+    });
+  });
+
+  describe('generateUniqueUsernameFromEmail', () => {
+    it('sanitizes the email local part into a lowercase username', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null);
+      const result = await service.generateUniqueUsernameFromEmail('Alice.Smith+test@example.com');
+      expect(result).toBe('alicesmithtest');
+    });
+
+    it('appends a numeric suffix on collision', async () => {
+      prismaMock.user.findUnique.mockResolvedValueOnce({ id: 'existing' }).mockResolvedValueOnce(null);
+      const result = await service.generateUniqueUsernameFromEmail('alice@example.com');
+      expect(result).toBe('alice1');
+    });
+
+    it('falls back to a "user"-prefixed name when the local part is too short', async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null);
+      const result = await service.generateUniqueUsernameFromEmail('ab@example.com');
+      expect(result).toBe('userab');
     });
   });
 });
