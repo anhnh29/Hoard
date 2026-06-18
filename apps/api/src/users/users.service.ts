@@ -12,6 +12,7 @@ interface CreateUserInput {
 interface UpdateProfileInput {
   name?: string;
   bio?: string | null;
+  avatarUrl?: string;
 }
 
 @Injectable()

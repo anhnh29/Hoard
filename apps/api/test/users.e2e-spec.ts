@@ -63,4 +63,14 @@ describe('Users (e2e)', () => {
     expect(res.body.name).toBe('New Name');
     expect(res.body.bio).toBe('Hello world');
   });
+
+  it('PATCH /users/me updates avatarUrl', async () => {
+    const res = await request(app.getHttpServer())
+      .patch('/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ avatarUrl: 'https://res.cloudinary.com/demo/image/upload/v1/avatar.png' })
+      .expect(200);
+
+    expect(res.body.avatarUrl).toBe('https://res.cloudinary.com/demo/image/upload/v1/avatar.png');
+  });
 });

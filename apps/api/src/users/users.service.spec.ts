@@ -59,6 +59,15 @@ describe('UsersService', () => {
     });
   });
 
+  it('updateProfile() updates avatarUrl', async () => {
+    prismaMock.user.update.mockResolvedValue({ id: '1' });
+    await service.updateProfile('1', { avatarUrl: 'https://example.com/a.png' });
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: '1' },
+      data: { avatarUrl: 'https://example.com/a.png' },
+    });
+  });
+
   it('setHashedRefreshToken() updates the token column', async () => {
     prismaMock.user.update.mockResolvedValue({ id: '1' });
     await service.setHashedRefreshToken('1', 'hashed-token');
