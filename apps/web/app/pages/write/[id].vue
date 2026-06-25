@@ -63,6 +63,56 @@ function removeTag(name: string) {
   tagNames.value = tagNames.value.filter((t) => t !== name);
   save({ tagNames: tagNames.value });
 }
+
+const coverUploading = ref(false);
+const coverError = ref<string | null>(null);
+
+async function onCoverSelected(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  coverUploading.value = true;
+  coverError.value = null;
+  try {
+    const signature = await useApi<{
+      timestamp: number;
+      signature: string;
+      apiKey: string;
+      cloudName: string;
+      folder: string;
+    }>(
+      config.public.apiBase,
+      '/articles/cover-upload-signature',
+      auth.accessToken,
+      () => auth.refreshAccessToken(config.public.apiBase),
+    );
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('api_key', signature.apiKey);
+    formData.append('timestamp', String(signature.timestamp));
+    formData.append('signature', signature.signature);
+    formData.append('folder', signature.folder);
+
+    const uploadResult = await $fetch<{ secure_url: string }>(
+      `https://api.cloudinary.com/v1_1/${signature.cloudName}/image/upload`,
+      { method: 'POST', body: formData },
+    );
+
+    const updated = await useApi<Article>(
+      config.public.apiBase,
+      `/articles/${articleId}`,
+      auth.accessToken,
+      () => auth.refreshAccessToken(config.public.apiBase),
+      { method: 'PATCH', body: { coverImageUrl: uploadResult.secure_url } },
+    );
+    if (article.value) article.value.coverImageUrl = updated.coverImageUrl;
+  } catch {
+    coverError.value = 'Cover image upload failed. Please try again.';
+  } finally {
+    coverUploading.value = false;
+  }
+}
 </script>
 
 <template>
@@ -85,5 +135,11 @@ function removeTag(name: string) {
       </button>
     </div>
     <ArticleEditor :content="article.content" @update="onEditorUpdate" />
+    <div>
+      <img v-if="article.coverImageUrl" :src="article.coverImageUrl" alt="Cover image" width="200" />
+      <input type="file" accept="image/*" :disabled="coverUploading" @change="onCoverSelected" />
+      <p v-if="coverUploading">Uploading...</p>
+      <p v-if="coverError">{{ coverError }}</p>
+    </div>
   </div>
 </template>
