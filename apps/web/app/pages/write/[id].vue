@@ -113,6 +113,25 @@ async function onCoverSelected(event: Event) {
     coverUploading.value = false;
   }
 }
+
+const publishError = ref<string | null>(null);
+
+async function togglePublish() {
+  if (!article.value) return;
+  publishError.value = null;
+  const action = article.value.status === 'PUBLISHED' ? 'unpublish' : 'publish';
+  try {
+    article.value = await useApi<Article>(
+      config.public.apiBase,
+      `/articles/${articleId}/${action}`,
+      auth.accessToken,
+      () => auth.refreshAccessToken(config.public.apiBase),
+      { method: 'POST' },
+    );
+  } catch {
+    publishError.value = `Could not ${action} this article. Make sure it has a title.`;
+  }
+}
 </script>
 
 <template>
@@ -140,6 +159,15 @@ async function onCoverSelected(event: Event) {
       <input type="file" accept="image/*" :disabled="coverUploading" @change="onCoverSelected" />
       <p v-if="coverUploading">Uploading...</p>
       <p v-if="coverError">{{ coverError }}</p>
+    </div>
+    <div>
+      <button type="button" @click="togglePublish">
+        {{ article.status === 'PUBLISHED' ? 'Unpublish' : 'Publish' }}
+      </button>
+      <p v-if="article.status === 'PUBLISHED'">
+        Published at <a :href="`/@${auth.user?.username}/${article.slug}`">/@{{ auth.user?.username }}/{{ article.slug }}</a>
+      </p>
+      <p v-if="publishError">{{ publishError }}</p>
     </div>
   </div>
 </template>
