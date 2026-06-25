@@ -100,4 +100,14 @@ describe('Articles (e2e)', () => {
       .set('Authorization', `Bearer ${otherSignup.body.accessToken}`)
       .expect(404);
   });
+
+  it('GET /articles/cover-upload-signature returns signed upload params, and is not swallowed by the :id route', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/articles/cover-upload-signature')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+    expect(res.body).toEqual(
+      expect.objectContaining({ folder: 'covers', apiKey: expect.any(String), signature: expect.any(String) }),
+    );
+  });
 });

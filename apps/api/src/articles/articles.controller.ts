@@ -4,15 +4,25 @@ import type { Article, AuthUser } from '@hoard/shared';
 import { ArticlesService } from './articles.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { CloudinaryService, type SignedUploadParams } from '../cloudinary/cloudinary.service';
 
 @Controller('articles')
 export class ArticlesController {
-  constructor(private readonly articlesService: ArticlesService) {}
+  constructor(
+    private readonly articlesService: ArticlesService,
+    private readonly cloudinaryService: CloudinaryService,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.create(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('cover-upload-signature')
+  getCoverUploadSignature(): SignedUploadParams {
+    return this.cloudinaryService.generateSignedUploadParams('covers');
   }
 
   @UseGuards(JwtAuthGuard)
