@@ -64,7 +64,7 @@ export class ArticlesService {
     const article = await this.findOwned(id, authorId);
     const data: Record<string, unknown> = {
       status: 'PUBLISHED',
-      slug: article.slug ?? slugify(article.title),
+      slug: article.slug ?? (await this.generateUniqueSlug(article.title)),
     };
     if (!article.publishedAt) {
       data.publishedAt = new Date();
@@ -93,5 +93,16 @@ export class ArticlesService {
       throw new NotFoundException('Article not found');
     }
     return article as ArticleWithTags;
+  }
+
+  private async generateUniqueSlug(title: string): Promise<string> {
+    const base = slugify(title);
+    let candidate = base;
+    let suffix = 1;
+    while (await this.prisma.article.findUnique({ where: { slug: candidate } })) {
+      suffix += 1;
+      candidate = `${base}-${suffix}`;
+    }
+    return candidate;
   }
 }

@@ -120,7 +120,9 @@ describe('ArticlesService', () => {
 
   describe('publish', () => {
     it('generates a slug and sets status/publishedAt on first publish', async () => {
-      prismaMock.article.findUnique.mockResolvedValue({ ...fakeArticle, title: 'Hello World' });
+      prismaMock.article.findUnique
+        .mockResolvedValueOnce({ ...fakeArticle, title: 'Hello World' }) // findOwned's ownership check
+        .mockResolvedValue(null); // generateUniqueSlug's collision check — no other article has this slug
       prismaMock.article.update.mockResolvedValue({
         ...fakeArticle,
         status: 'PUBLISHED',
@@ -134,6 +136,24 @@ describe('ArticlesService', () => {
       expect(updateCall.data.status).toBe('PUBLISHED');
       expect(updateCall.data.slug).toBe('hello-world');
       expect(updateCall.data.publishedAt).toBeInstanceOf(Date);
+    });
+
+    it('appends -2 to the slug when the first candidate is already taken', async () => {
+      prismaMock.article.findUnique
+        .mockResolvedValueOnce({ ...fakeArticle, title: 'Hello World' }) // findOwned's ownership check
+        .mockResolvedValueOnce({ ...fakeArticle, id: 'other', slug: 'hello-world' }) // collision: "hello-world" taken
+        .mockResolvedValueOnce(null); // "hello-world-2" is free
+      prismaMock.article.update.mockResolvedValue({
+        ...fakeArticle,
+        status: 'PUBLISHED',
+        slug: 'hello-world-2',
+        publishedAt: new Date(),
+      });
+
+      await service.publish('a1', 'u1');
+
+      const updateCall = prismaMock.article.update.mock.calls[0][0];
+      expect(updateCall.data.slug).toBe('hello-world-2');
     });
 
     it('keeps the existing slug and does not reset publishedAt on republish', async () => {
