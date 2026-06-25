@@ -1129,7 +1129,7 @@ Expected: FAIL — `404 Not Found` (routes don't exist yet).
 
 - [ ] **Step 4: Implement `ArticlesController`**
 
-Create `apps/api/src/articles/articles.controller.ts`. **Note the route ordering:** there are only 5 routes in this task, none colliding (the colliding one comes in Task 7) — but write this file with the awareness that Task 7 must insert its new route ABOVE `@Get(':id')`, not below.
+Create `apps/api/src/articles/articles.controller.ts`. **Guard convention:** mirror `UsersController` exactly — no class-level `@UseGuards`, each authenticated method gets its own `@UseGuards(JwtAuthGuard)`. This matters for Phase 2b, which adds a public (unguarded) route to this same controller. **Note the route ordering:** there are only 5 routes in this task, none colliding (the colliding one comes in Task 7) — but write this file with the awareness that Task 7 must insert its new route ABOVE `@Get(':id')`, not below.
 ```ts
 import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
@@ -1139,20 +1139,22 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateArticleDto } from './dto/update-article.dto';
 
 @Controller('articles')
-@UseGuards(JwtAuthGuard)
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.create(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.findByIdForAuthor(id, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -1162,11 +1164,13 @@ export class ArticlesController {
     return this.articlesService.update(id, req.user.id, dto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/publish')
   publish(@Param('id') id: string, @Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.publish(id, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/unpublish')
   unpublish(@Param('id') id: string, @Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.unpublish(id, req.user.id);
@@ -1255,28 +1259,31 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { CloudinaryService, type SignedUploadParams } from '../cloudinary/cloudinary.service';
 
 @Controller('articles')
-@UseGuards(JwtAuthGuard)
 export class ArticlesController {
   constructor(
     private readonly articlesService: ArticlesService,
     private readonly cloudinaryService: CloudinaryService,
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.create(req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('cover-upload-signature')
   getCoverUploadSignature(): SignedUploadParams {
     return this.cloudinaryService.generateSignedUploadParams('covers');
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string, @Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.findByIdForAuthor(id, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(
     @Param('id') id: string,
@@ -1286,11 +1293,13 @@ export class ArticlesController {
     return this.articlesService.update(id, req.user.id, dto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/publish')
   publish(@Param('id') id: string, @Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.publish(id, req.user.id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post(':id/unpublish')
   unpublish(@Param('id') id: string, @Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.unpublish(id, req.user.id);
