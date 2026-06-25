@@ -1558,16 +1558,17 @@ git commit -m "feat: add useArticleAutosave composable"
 ### Task 10: `/write` and `/write/[id]` pages — core editor loop
 
 **Files:**
-- Create: `apps/web/app/pages/write.vue`
+- Create: `apps/web/app/pages/write/index.vue` (NOT `apps/web/app/pages/write.vue` — see note below)
 - Create: `apps/web/app/pages/write/[id].vue`
 
 **Interfaces:**
 - Consumes: `ArticleEditor` (Task 8), `useArticleAutosave` (Task 9), `useApi` + `useAuthStore` (Phase 1, unchanged).
 - Produces: a working create-draft → edit-with-autosave loop. Title input and editor content both autosave. Tasks 11-13 add tag picker, cover image, and publish/unpublish controls to `write/[id].vue` incrementally. Manually verified (no automated test — same precedent as `settings/profile.vue`).
+- **File placement note:** a sibling `write.vue` file alongside a `write/` directory makes Nuxt 4's file-based router treat `write.vue` as a parent layout for everything under `write/` (requiring a `<NuxtPage/>` outlet, and re-running the parent's setup on every nested navigation) rather than as a standalone page at `/write`. Use `write/index.vue` instead — it produces the identical `/write` URL with no nesting relationship to `write/[id].vue`.
 
 - [ ] **Step 1: Create the redirect page**
 
-Create `apps/web/app/pages/write.vue`:
+Create `apps/web/app/pages/write/index.vue`:
 ```vue
 <script setup lang="ts">
 const auth = useAuthStore();
@@ -1658,7 +1659,7 @@ Start `pnpm dev`, log in, navigate to `/write`. Confirm: (a) it redirects to `/w
 - [ ] **Step 4: Commit**
 
 ```bash
-git add apps/web/app/pages/write.vue apps/web/app/pages/write/[id].vue
+git add apps/web/app/pages/write/index.vue apps/web/app/pages/write/[id].vue
 git commit -m "feat: add write/[id] page with Tiptap editor and autosave"
 ```
 
