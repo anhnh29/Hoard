@@ -14,6 +14,9 @@ describe('Auth (e2e)', () => {
   beforeAll(async () => {
     process.env.JWT_ACCESS_SECRET ??= 'test-access-secret';
     process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret';
+    process.env.GOOGLE_CLIENT_ID ??= 'test-google-client-id';
+    process.env.GOOGLE_CLIENT_SECRET ??= 'test-google-client-secret';
+    process.env.GOOGLE_CALLBACK_URL ??= 'http://localhost:3001/auth/google/callback';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -84,5 +87,10 @@ describe('Auth (e2e)', () => {
 
   it('rejects /me without a token', async () => {
     await request(app.getHttpServer()).get('/auth/me').expect(401);
+  });
+
+  it('GET /auth/google redirects to Google\'s OAuth consent screen', async () => {
+    const res = await request(app.getHttpServer()).get('/auth/google').expect(302);
+    expect(res.headers.location).toContain('accounts.google.com');
   });
 });
