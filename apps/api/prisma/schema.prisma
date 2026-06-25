@@ -17,4 +17,43 @@ model User {
   avatarUrl          String?
   hashedRefreshToken String?
   createdAt          DateTime @default(now())
+  articles           Article[]
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Article {
+  id            String        @id @default(uuid())
+  title         String        @default("")
+  slug          String?       @unique
+  content       Json          @default("{\"type\":\"doc\",\"content\":[{\"type\":\"paragraph\"}]}")
+  excerpt       String?
+  coverImageUrl String?
+  status        ArticleStatus @default(DRAFT)
+  authorId      String
+  author        User          @relation(fields: [authorId], references: [id])
+  publishedAt   DateTime?
+  readingTime   Int           @default(1)
+  tags          ArticleTag[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Tag {
+  id       String       @id @default(uuid())
+  name     String       @unique
+  slug     String       @unique
+  articles ArticleTag[]
+}
+
+model ArticleTag {
+  articleId String
+  tagId     String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
 }
