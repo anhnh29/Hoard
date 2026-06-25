@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TagsModule } from './tags/tags.module';
+import { ArticlesModule } from './articles/articles.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { TagsModule } from './tags/tags.module';
     UsersModule,
     AuthModule,
     TagsModule,
+    ArticlesModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
