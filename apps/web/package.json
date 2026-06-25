@@ -13,6 +13,11 @@
   "dependencies": {
     "@hoard/shared": "workspace:*",
     "@pinia/nuxt": "^0.11.3",
+    "@tiptap/extension-image": "^2.27.2",
+    "@tiptap/extension-link": "^2.27.2",
+    "@tiptap/pm": "^2.27.2",
+    "@tiptap/starter-kit": "^2.27.2",
+    "@tiptap/vue-3": "^2.27.2",
     "@vee-validate/zod": "^4.15.1",
     "nuxt": "^4.4.8",
     "pinia": "^3.0.4",
