@@ -5,6 +5,7 @@ import type { AuthUser } from '@hoard/shared';
 import { AuthService, REFRESH_TOKEN_TTL_MS } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { GoogleAuthGuard } from './google-auth.guard';
 import { SignupDto } from './dto/signup.dto';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
@@ -61,5 +62,21 @@ export class AuthController {
   @Get('me')
   me(@Req() req: Request & { user: AuthUser }): AuthUser {
     return req.user;
+  }
+
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @UseGuards(GoogleAuthGuard)
+  @Get('google')
+  googleAuth() {}
+
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  @UseGuards(GoogleAuthGuard)
+  @Get('google/callback')
+  async googleCallback(@Req() req: Request & { user: AuthUser }, @Res() res: Response) {
+    const tokens = await this.authService.login(req.user);
+    res.cookie(REFRESH_COOKIE_NAME, tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+    const webOrigin = process.env.WEB_ORIGIN ?? 'http://localhost:3000';
+    const userParam = encodeURIComponent(JSON.stringify(req.user));
+    res.redirect(`${webOrigin}/oauth/callback#accessToken=${tokens.accessToken}&user=${userParam}`);
   }
 }

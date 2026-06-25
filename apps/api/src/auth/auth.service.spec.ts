@@ -12,6 +12,7 @@ describe('AuthService', () => {
     findById: jest.fn(),
     create: jest.fn(),
     setHashedRefreshToken: jest.fn(),
+    generateUniqueUsernameFromEmail: jest.fn(),
   };
   const jwtServiceMock = {
     signAsync: jest.fn(),
@@ -127,6 +128,38 @@ describe('AuthService', () => {
     it('clears the stored refresh token hash', async () => {
       await service.logout('u1');
       expect(usersServiceMock.setHashedRefreshToken).toHaveBeenCalledWith('u1', null);
+    });
+  });
+
+  describe('findOrCreateGoogleUser', () => {
+    it('returns the existing user when the email already exists (account linking, no error)', async () => {
+      usersServiceMock.findByEmail.mockResolvedValue(fakeUser);
+
+      const result = await service.findOrCreateGoogleUser({ email: 'alice@example.com', name: 'Alice' });
+
+      expect(result).toEqual({ id: 'u1', email: 'alice@example.com', username: 'alice', name: 'Alice' });
+      expect(usersServiceMock.create).not.toHaveBeenCalled();
+    });
+
+    it('creates a new user with no password when the email is new', async () => {
+      usersServiceMock.findByEmail.mockResolvedValue(null);
+      usersServiceMock.generateUniqueUsernameFromEmail.mockResolvedValue('newgoogleuser');
+      usersServiceMock.create.mockResolvedValue({
+        ...fakeUser,
+        id: 'u2',
+        username: 'newgoogleuser',
+        passwordHash: null,
+      });
+
+      const result = await service.findOrCreateGoogleUser({ email: 'new@example.com', name: 'New Person' });
+
+      expect(usersServiceMock.create).toHaveBeenCalledWith({
+        email: 'new@example.com',
+        passwordHash: null,
+        name: 'New Person',
+        username: 'newgoogleuser',
+      });
+      expect(result.username).toBe('newgoogleuser');
     });
   });
 });

@@ -49,4 +49,5 @@ const onSubmit = handleSubmit(async (values) => {
     <p v-if="submitError">{{ submitError }}</p>
     <button type="submit">Log in</button>
   </form>
+  <a :href="`${config.public.apiBase}/auth/google`">Continue with Google</a>
 </template>

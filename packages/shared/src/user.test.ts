@@ -60,4 +60,19 @@ describe('updateProfileSchema', () => {
     const result = updateProfileSchema.safeParse({ bio: 'x'.repeat(281) });
     expect(result.success).toBe(false);
   });
+
+  it('accepts an avatarUrl', () => {
+    const result = updateProfileSchema.safeParse({
+      avatarUrl: 'https://res.cloudinary.com/demo/image/upload/v1/avatar.png',
+    });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.avatarUrl).toBe(
+      'https://res.cloudinary.com/demo/image/upload/v1/avatar.png',
+    );
+  });
+
+  it('rejects a non-URL avatarUrl', () => {
+    const result = updateProfileSchema.safeParse({ avatarUrl: 'not-a-url' });
+    expect(result.success).toBe(false);
+  });
 });

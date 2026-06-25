@@ -90,6 +90,21 @@ export class AuthService {
     await this.usersService.setHashedRefreshToken(userId, null);
   }
 
+  async findOrCreateGoogleUser(profile: { email: string; name: string }): Promise<AuthUser> {
+    const existing = await this.usersService.findByEmail(profile.email);
+    if (existing) {
+      return toAuthUser(existing);
+    }
+    const username = await this.usersService.generateUniqueUsernameFromEmail(profile.email);
+    const user = await this.usersService.create({
+      email: profile.email,
+      passwordHash: null,
+      name: profile.name,
+      username,
+    });
+    return toAuthUser(user);
+  }
+
   private async issueTokens(user: AuthUser): Promise<TokenPair> {
     const payload = { sub: user.id, email: user.email, username: user.username, name: user.name };
     const accessToken = await this.jwtService.signAsync(payload, {

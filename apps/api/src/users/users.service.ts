@@ -4,7 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 interface CreateUserInput {
   email: string;
-  passwordHash: string;
+  passwordHash?: string | null;
   name: string;
   username: string;
 }
@@ -12,6 +12,7 @@ interface CreateUserInput {
 interface UpdateProfileInput {
   name?: string;
   bio?: string | null;
+  avatarUrl?: string;
 }
 
 @Injectable()
@@ -40,5 +41,17 @@ export class UsersService {
 
   setHashedRefreshToken(id: string, hashedRefreshToken: string | null): Promise<User> {
     return this.prisma.user.update({ where: { id }, data: { hashedRefreshToken } });
+  }
+
+  async generateUniqueUsernameFromEmail(email: string): Promise<string> {
+    const localPart = email.split('@')[0]?.toLowerCase().replace(/[^a-z0-9_]/g, '') ?? '';
+    const base = (localPart.length >= 3 ? localPart : `user${localPart}`).slice(0, 26);
+    let candidate = base;
+    let suffix = 0;
+    while (await this.findByUsername(candidate)) {
+      suffix += 1;
+      candidate = `${base}${suffix}`.slice(0, 30);
+    }
+    return candidate;
   }
 }

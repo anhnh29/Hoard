@@ -15,6 +15,10 @@ describe('Users (e2e)', () => {
   beforeAll(async () => {
     process.env.JWT_ACCESS_SECRET ??= 'test-access-secret';
     process.env.JWT_REFRESH_SECRET ??= 'test-refresh-secret';
+    process.env.GOOGLE_CLIENT_ID ??= 'test-google-client-id';
+    process.env.GOOGLE_CLIENT_SECRET ??= 'test-google-client-secret';
+    process.env.GOOGLE_CALLBACK_URL ??= 'http://localhost:3001/auth/google/callback';
+    process.env.CLOUDINARY_URL = 'cloudinary://test-key:test-secret@test-cloud';
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
@@ -62,5 +66,32 @@ describe('Users (e2e)', () => {
 
     expect(res.body.name).toBe('New Name');
     expect(res.body.bio).toBe('Hello world');
+  });
+
+  it('PATCH /users/me updates avatarUrl', async () => {
+    const res = await request(app.getHttpServer())
+      .patch('/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ avatarUrl: 'https://res.cloudinary.com/demo/image/upload/v1/avatar.png' })
+      .expect(200);
+
+    expect(res.body.avatarUrl).toBe('https://res.cloudinary.com/demo/image/upload/v1/avatar.png');
+  });
+
+  it('GET /users/me/avatar-upload-signature returns signed Cloudinary upload params', async () => {
+    await request(app.getHttpServer()).get('/users/me/avatar-upload-signature').expect(401);
+
+    const res = await request(app.getHttpServer())
+      .get('/users/me/avatar-upload-signature')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(res.body).toEqual({
+      timestamp: expect.any(Number),
+      signature: expect.any(String),
+      apiKey: 'test-key',
+      cloudName: 'test-cloud',
+      folder: 'avatars',
+    });
   });
 });
