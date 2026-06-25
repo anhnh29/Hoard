@@ -27,6 +27,16 @@ try {
   loadError.value = 'Could not load this draft.';
 }
 
+const allTags = ref<{ name: string }[]>([]);
+const tagNames = ref<string[]>(article.value?.tagNames ?? []);
+const newTagInput = ref('');
+
+try {
+  allTags.value = await $fetch<{ name: string }[]>(`${config.public.apiBase}/tags`);
+} catch {
+  allTags.value = [];
+}
+
 const { status: saveStatus, scheduleSave } = useArticleAutosave(config.public.apiBase, articleId);
 
 function save(patch: Record<string, unknown>) {
@@ -40,6 +50,19 @@ function onTitleInput() {
 function onEditorUpdate(content: Record<string, unknown>) {
   save({ content });
 }
+
+function addTag(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed || tagNames.value.includes(trimmed)) return;
+  tagNames.value = [...tagNames.value, trimmed];
+  newTagInput.value = '';
+  save({ tagNames: tagNames.value });
+}
+
+function removeTag(name: string) {
+  tagNames.value = tagNames.value.filter((t) => t !== name);
+  save({ tagNames: tagNames.value });
+}
 </script>
 
 <template>
@@ -47,6 +70,20 @@ function onEditorUpdate(content: Record<string, unknown>) {
   <div v-else-if="article">
     <input v-model="title" placeholder="Title" @input="onTitleInput" />
     <p>{{ saveStatus }}</p>
+    <div>
+      <span v-for="tag in tagNames" :key="tag">
+        {{ tag }} <button type="button" @click="removeTag(tag)">x</button>
+      </span>
+      <input v-model="newTagInput" placeholder="Add a tag" @keyup.enter="addTag(newTagInput)" />
+      <button
+        v-for="suggestion in allTags.filter((t) => !tagNames.includes(t.name))"
+        :key="suggestion.name"
+        type="button"
+        @click="addTag(suggestion.name)"
+      >
+        {{ suggestion.name }}
+      </button>
+    </div>
     <ArticleEditor :content="article.content" @update="onEditorUpdate" />
   </div>
 </template>
