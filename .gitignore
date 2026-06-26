@@ -30,3 +30,6 @@ logs
 
 # Turborepo cache
 .turbo
+
+# Playwright MCP debug artifacts
+.playwright-mcp
