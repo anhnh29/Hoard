@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Tag } from '@prisma/client';
+import type { TagWithArticles } from '@hoard/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { slugify } from '../articles/slug.util';
+import { ARTICLE_WITH_AUTHOR_INCLUDE, toArticleListItem, type ArticleWithTagsAndAuthor } from '../articles/articles.mapper';
 
 @Injectable()
 export class TagsService {
@@ -24,5 +26,21 @@ export class TagsService {
       tags.push(created);
     }
     return tags;
+  }
+
+  async findBySlugWithPublishedArticles(slug: string): Promise<TagWithArticles> {
+    const tag = await this.prisma.tag.findUnique({ where: { slug } });
+    if (!tag) {
+      throw new NotFoundException('Tag not found');
+    }
+    const articleTags = await this.prisma.articleTag.findMany({
+      where: { tagId: tag.id, article: { status: 'PUBLISHED' } },
+      include: { article: { include: ARTICLE_WITH_AUTHOR_INCLUDE } },
+      orderBy: { article: { publishedAt: 'desc' } },
+    });
+    return {
+      tag: { name: tag.name, slug: tag.slug },
+      articles: articleTags.map((at) => toArticleListItem(at.article as ArticleWithTagsAndAuthor)),
+    };
   }
 }
