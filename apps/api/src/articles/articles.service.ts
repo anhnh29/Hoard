@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Article as PrismaArticle, ArticleTag, Tag } from '@prisma/client';
-import type { Article, UpdateArticleInput } from '@hoard/shared';
+import type { Article, PublicArticle, UpdateArticleInput } from '@hoard/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { TagsService } from '../tags/tags.service';
 import { slugify } from './slug.util';
 import { calculateExcerpt, calculateReadingTime } from './reading-time.util';
-import { toArticle } from './articles.mapper';
+import { ARTICLE_WITH_AUTHOR_INCLUDE, toArticle, toPublicArticle, type ArticleWithTagsAndAuthor } from './articles.mapper';
 
 const ARTICLE_INCLUDE = { tags: { include: { tag: true } } } as const;
 type ArticleWithTags = PrismaArticle & { tags: (ArticleTag & { tag: Tag })[] };
@@ -85,6 +85,17 @@ export class ArticlesService {
       include: ARTICLE_INCLUDE,
     });
     return toArticle(updated as ArticleWithTags);
+  }
+
+  async findPublishedBySlug(username: string, slug: string): Promise<PublicArticle> {
+    const article = await this.prisma.article.findUnique({
+      where: { slug },
+      include: ARTICLE_WITH_AUTHOR_INCLUDE,
+    });
+    if (!article || article.status !== 'PUBLISHED' || article.author.username !== username) {
+      throw new NotFoundException('Article not found');
+    }
+    return toPublicArticle(article as ArticleWithTagsAndAuthor);
   }
 
   private async findOwned(id: string, authorId: string): Promise<ArticleWithTags> {

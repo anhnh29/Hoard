@@ -36,6 +36,7 @@ describe('ArticlesService', () => {
     tags: [],
     createdAt: new Date(),
     updatedAt: new Date(),
+    author: { username: 'testuser', name: 'Test User', avatarUrl: null },
   };
 
   beforeEach(async () => {
@@ -183,6 +184,44 @@ describe('ArticlesService', () => {
 
       expect(prismaMock.article.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { status: 'DRAFT' } }),
+      );
+    });
+  });
+
+  describe('findPublishedBySlug', () => {
+    it('returns the article when published and the username matches the author', async () => {
+      prismaMock.article.findUnique.mockResolvedValue({
+        ...fakeArticle,
+        status: 'PUBLISHED',
+        slug: 'hello-world',
+        publishedAt: new Date('2024-01-01'),
+      });
+
+      const result = await service.findPublishedBySlug('testuser', 'hello-world');
+
+      expect(result.slug).toBe('hello-world');
+      expect(result.author).toEqual({ username: 'testuser', name: 'Test User', avatarUrl: null });
+    });
+
+    it('throws NotFoundException when the article does not exist', async () => {
+      prismaMock.article.findUnique.mockResolvedValue(null);
+      await expect(service.findPublishedBySlug('testuser', 'missing')).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('throws NotFoundException when the article is still a draft', async () => {
+      prismaMock.article.findUnique.mockResolvedValue({ ...fakeArticle, status: 'DRAFT', slug: 'hello-world' });
+      await expect(service.findPublishedBySlug('testuser', 'hello-world')).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('throws NotFoundException when the username does not match the actual author', async () => {
+      prismaMock.article.findUnique.mockResolvedValue({
+        ...fakeArticle,
+        status: 'PUBLISHED',
+        slug: 'hello-world',
+        publishedAt: new Date('2024-01-01'),
+      });
+      await expect(service.findPublishedBySlug('someone-else', 'hello-world')).rejects.toBeInstanceOf(
+        NotFoundException,
       );
     });
   });
