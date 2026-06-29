@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TagsService } from './tags.service';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,6 +9,9 @@ describe('TagsService', () => {
     tag: {
       findUnique: jest.fn(),
       create: jest.fn(),
+    },
+    articleTag: {
+      findMany: jest.fn(),
     },
   };
 
@@ -47,5 +51,43 @@ describe('TagsService', () => {
     const result = await service.findOrCreateManyByName(['vue', 'vue']);
 
     expect(result).toHaveLength(1);
+  });
+
+  describe('findBySlugWithPublishedArticles', () => {
+    it('throws NotFoundException when the tag does not exist', async () => {
+      prismaMock.tag.findUnique.mockResolvedValue(null);
+      await expect(service.findBySlugWithPublishedArticles('missing')).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('returns the tag and its published articles, newest first', async () => {
+      prismaMock.tag.findUnique.mockResolvedValue({ id: 't1', name: 'vue', slug: 'vue' });
+      prismaMock.articleTag.findMany.mockResolvedValue([
+        {
+          article: {
+            id: 'a1',
+            title: 'Hello',
+            slug: 'hello',
+            excerpt: 'Hi',
+            coverImageUrl: null,
+            readingTime: 1,
+            publishedAt: new Date('2024-01-01'),
+            tags: [{ tag: { name: 'vue', slug: 'vue' } }],
+            author: { username: 'testuser', name: 'Test User', avatarUrl: null },
+          },
+        },
+      ]);
+
+      const result = await service.findBySlugWithPublishedArticles('vue');
+
+      expect(result.tag).toEqual({ name: 'vue', slug: 'vue' });
+      expect(result.articles).toHaveLength(1);
+      expect(result.articles[0].slug).toBe('hello');
+      expect(prismaMock.articleTag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { tagId: 't1', article: { status: 'PUBLISHED' } },
+          orderBy: { article: { publishedAt: 'desc' } },
+        }),
+      );
+    });
   });
 });

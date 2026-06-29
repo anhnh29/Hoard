@@ -110,4 +110,37 @@ describe('Articles (e2e)', () => {
       expect.objectContaining({ folder: 'covers', apiKey: expect.any(String), signature: expect.any(String) }),
     );
   });
+
+  it('GET /articles/by-slug/:username/:slug serves a published article with no auth, and 404s for a draft', async () => {
+    const createRes = await request(app.getHttpServer())
+      .post('/articles')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(201);
+    const articleId = createRes.body.id;
+
+    await request(app.getHttpServer())
+      .patch(`/articles/${articleId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ title: 'Public Read Test' })
+      .expect(200);
+
+    await request(app.getHttpServer())
+      .get(`/articles/by-slug/${testUsername}/public-read-test`)
+      .expect(404);
+
+    await request(app.getHttpServer())
+      .post(`/articles/${articleId}/publish`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(201);
+
+    const res = await request(app.getHttpServer())
+      .get(`/articles/by-slug/${testUsername}/public-read-test`)
+      .expect(200);
+    expect(res.body.title).toBe('Public Read Test');
+    expect(res.body.author).toEqual(expect.objectContaining({ username: testUsername }));
+
+    await request(app.getHttpServer())
+      .get(`/articles/by-slug/someone-else/public-read-test`)
+      .expect(404);
+  });
 });
