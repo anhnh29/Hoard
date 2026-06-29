@@ -501,11 +501,13 @@ git commit -m "feat: add public GET /tags/:slug/articles endpoint"
 
 **Files:**
 - Modify: `apps/web/package.json`
+- Move: `apps/web/app/pages/@[username].vue` → `apps/web/app/pages/@[username]/index.vue` (content unchanged, see note below)
 - Create: `apps/web/app/pages/@[username]/[slug].vue`
 
 **Interfaces:**
 - Consumes: `GET /articles/by-slug/:username/:slug` (Task 3).
 - Produces: the public article reading view. Manually verified (no automated test — same precedent as `@[username].vue`).
+- **File placement note (corrects an earlier wrong assumption in this plan):** a top-level `@[username].vue` file does NOT coexist cleanly with a same-named `@[username]/` directory — Nuxt 4 treats the file as the PARENT route, and a same-named sibling directory's contents become its nested children, rendered only if the parent template contains `<NuxtPage/>`. Without that, navigating to `/@user/slug` silently falls through to the parent's own template (the profile page), masking the child route entirely — confirmed by reproducing it and observing the 404 page's copy come from the wrong page. The fix is the same one Phase 2a's Task 10 already established for `write.vue` vs `write/[id].vue`: move the parent file into the directory as `index.vue`, making it a sibling of `[slug].vue` rather than an ambiguous same-named outer file. This is a pure move with no content changes.
 
 - [ ] **Step 1: Add the `@tiptap/html` dependency**
 
@@ -513,9 +515,16 @@ git commit -m "feat: add public GET /tags/:slug/articles endpoint"
 pnpm --filter @hoard/web add @tiptap/html@^2.11.0
 ```
 
-- [ ] **Step 2: Create the page**
+- [ ] **Step 2: Move the existing profile page into the directory**
 
-Create `apps/web/app/pages/@[username]/[slug].vue` (a directory named `@[username]` containing `[slug].vue` — this coexists with the existing top-level `@[username].vue` file without conflict, since they match different route depths: `/@:username` vs `/@:username/:slug`):
+```bash
+git mv apps/web/app/pages/@[username].vue apps/web/app/pages/@[username]/index.vue
+```
+No content changes — this is a pure rename. It still serves `/@:username` exactly as before; verify with a quick visit to any existing profile URL.
+
+- [ ] **Step 3: Create the article page**
+
+Create `apps/web/app/pages/@[username]/[slug].vue`:
 ```vue
 <script setup lang="ts">
 import { generateHTML } from '@tiptap/html';
@@ -560,21 +569,21 @@ const contentHtml = computed(() =>
 </template>
 ```
 
-- [ ] **Step 3: Verify the build**
+- [ ] **Step 4: Verify the build**
 
 ```bash
 pnpm --filter @hoard/web build
 ```
 Expected: succeeds.
 
-- [ ] **Step 4: Manual verification**
+- [ ] **Step 5: Manual verification**
 
-Start `pnpm dev`, publish an article via `/write/:id` (Phase 2a), then visit `/@<your-username>/<slug>`. Confirm: (a) title, cover image (if set), byline linking to your profile, reading time, publish date, tags, and rendered rich-text content all display correctly, (b) clicking a tag navigates toward `/tag/<slug>` (the page itself comes in Task 7), (c) visiting the same URL with a wrong username (e.g. `/@nobody/<slug>`) shows "Article not found," (d) visiting a draft's would-be URL (guess a title-derived slug for an unpublished article) also shows "Article not found."
+Start `pnpm dev`, publish an article via `/write/:id` (Phase 2a), then visit `/@<your-username>/<slug>`. Confirm: (a) title, cover image (if set), byline linking to your profile, reading time, publish date, tags, and rendered rich-text content all display correctly, (b) clicking a tag navigates toward `/tag/<slug>` (the page itself comes in Task 7), (c) visiting the same URL with a wrong username (e.g. `/@nobody/<slug>`) shows "Article not found" — specifically from THIS page, not the profile page's "User not found" (confirms the route split is genuine), (d) visiting a draft's would-be URL (guess a title-derived slug for an unpublished article) also shows "Article not found," (e) `/@<your-username>` with no slug still renders the profile page correctly (confirms the `index.vue` move didn't break it).
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add apps/web/package.json apps/web/pnpm-lock.yaml "apps/web/app/pages/@[username]/[slug].vue"
+git add apps/web/package.json apps/web/pnpm-lock.yaml "apps/web/app/pages/@[username]"
 git commit -m "feat: add public article reading page"
 ```
 
