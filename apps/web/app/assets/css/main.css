@@ -5,9 +5,12 @@
   --color-ink-light: #6b6b6b;
   --color-accent: #1a8917;
   --color-border: #e5e5e5;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
 }
 
 body {
   background-color: #ffffff;
   color: var(--color-ink);
+  font-family: var(--font-sans);
 }
