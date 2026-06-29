@@ -33,3 +33,6 @@ logs
 
 # Playwright MCP debug artifacts
 .playwright-mcp
+
+# Superpowers scratch (sdd ledgers, brainstorm session artifacts)
+.superpowers
