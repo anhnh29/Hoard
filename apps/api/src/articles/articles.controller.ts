@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import type { Request } from 'express';
-import type { Article, AuthUser } from '@hoard/shared';
+import type { Article, AuthUser, PublicArticle } from '@hoard/shared';
 import { ArticlesService } from './articles.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -51,5 +51,10 @@ export class ArticlesController {
   @Post(':id/unpublish')
   unpublish(@Param('id') id: string, @Req() req: Request & { user: AuthUser }): Promise<Article> {
     return this.articlesService.unpublish(id, req.user.id);
+  }
+
+  @Get('by-slug/:username/:slug')
+  findPublishedBySlug(@Param('username') username: string, @Param('slug') slug: string): Promise<PublicArticle> {
+    return this.articlesService.findPublishedBySlug(username, slug);
   }
 }
