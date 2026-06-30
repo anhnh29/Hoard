@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import ArticleEditor from '~/components/editor/ArticleEditor.vue';
+import Button from '~/components/ui/Button.vue';
+import Input from '~/components/ui/Input.vue';
+import TagPill from '~/components/ui/TagPill.vue';
 import type { Article } from '@hoard/shared';
 
 const route = useRoute();
@@ -135,39 +138,91 @@ async function togglePublish() {
 </script>
 
 <template>
-  <p v-if="loadError">{{ loadError }}</p>
+  <p v-if="loadError" class="mx-auto max-w-2xl px-6 py-16 text-sm text-red-600">{{ loadError }}</p>
   <div v-else-if="article">
-    <input v-model="title" placeholder="Title" @input="onTitleInput" />
-    <p>{{ saveStatus }}</p>
-    <div>
-      <span v-for="tag in tagNames" :key="tag">
-        {{ tag }} <button type="button" @click="removeTag(tag)">x</button>
-      </span>
-      <input v-model="newTagInput" placeholder="Add a tag" @keyup.enter="addTag(newTagInput)" />
-      <button
-        v-for="suggestion in allTags.filter((t) => !tagNames.includes(t.name))"
-        :key="suggestion.name"
-        type="button"
-        @click="addTag(suggestion.name)"
-      >
-        {{ suggestion.name }}
-      </button>
+    <div class="border-b border-border bg-white">
+      <div class="mx-auto flex max-w-[680px] items-center justify-between px-6 py-3">
+        <p class="text-sm text-ink-light">
+          <span v-if="saveStatus === 'saving'">Saving...</span>
+          <span v-else-if="saveStatus === 'saved'">Saved</span>
+          <span v-else-if="saveStatus === 'error'">Could not save</span>
+        </p>
+        <div class="flex items-center gap-3">
+          <p v-if="publishError" class="text-sm text-red-600">{{ publishError }}</p>
+          <Button type="button" @click="togglePublish">
+            {{ article.status === 'PUBLISHED' ? 'Unpublish' : 'Publish' }}
+          </Button>
+        </div>
+      </div>
     </div>
-    <ArticleEditor :content="article.content" @update="onEditorUpdate" />
-    <div>
-      <img v-if="article.coverImageUrl" :src="article.coverImageUrl" alt="Cover image" width="200" />
-      <input type="file" accept="image/*" :disabled="coverUploading" @change="onCoverSelected" />
-      <p v-if="coverUploading">Uploading...</p>
-      <p v-if="coverError">{{ coverError }}</p>
-    </div>
-    <div>
-      <button type="button" @click="togglePublish">
-        {{ article.status === 'PUBLISHED' ? 'Unpublish' : 'Publish' }}
-      </button>
-      <p v-if="article.status === 'PUBLISHED'">
-        Published at <a :href="`/@${auth.user?.username}/${article.slug}`">/@{{ auth.user?.username }}/{{ article.slug }}</a>
+
+    <div class="mx-auto max-w-[680px] px-6 py-10">
+      <p v-if="article.status === 'PUBLISHED'" class="mb-4 text-sm text-ink-light">
+        Published at
+        <a :href="`/@${auth.user?.username}/${article.slug}`" class="text-accent hover:underline">
+          /@{{ auth.user?.username }}/{{ article.slug }}
+        </a>
       </p>
-      <p v-if="publishError">{{ publishError }}</p>
+
+      <input
+        v-model="title"
+        placeholder="Title"
+        class="w-full border-none font-serif text-4xl font-bold text-ink placeholder:text-ink-light/60 focus:outline-none"
+        @input="onTitleInput"
+      />
+
+      <div class="mt-6 flex flex-wrap items-center gap-2">
+        <TagPill v-for="tag in tagNames" :key="tag" :name="tag">
+          <button type="button" class="text-ink-light hover:text-ink" @click="removeTag(tag)">×</button>
+        </TagPill>
+        <Input
+          v-model="newTagInput"
+          placeholder="Add a tag"
+          class="w-32"
+          @keyup.enter="addTag(newTagInput)"
+        />
+      </div>
+      <div v-if="allTags.filter((t) => !tagNames.includes(t.name)).length > 0" class="mt-2 flex flex-wrap gap-2">
+        <button
+          v-for="suggestion in allTags.filter((t) => !tagNames.includes(t.name))"
+          :key="suggestion.name"
+          type="button"
+          class="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-ink-light hover:bg-neutral-200"
+          @click="addTag(suggestion.name)"
+        >
+          {{ suggestion.name }}
+        </button>
+      </div>
+
+      <div class="prose-serif mt-8">
+        <ArticleEditor :content="article.content" @update="onEditorUpdate" />
+      </div>
+
+      <div class="mt-8 border-t border-border pt-6">
+        <img v-if="article.coverImageUrl" :src="article.coverImageUrl" alt="Cover image" class="mb-3 w-full rounded-md object-cover" />
+        <label class="block cursor-pointer rounded-md border border-dashed border-border px-4 py-6 text-center text-sm text-ink-light hover:border-accent">
+          <input type="file" accept="image/*" :disabled="coverUploading" class="hidden" @change="onCoverSelected" />
+          {{ article.coverImageUrl ? 'Replace cover image' : 'Add a cover image' }}
+        </label>
+        <p v-if="coverUploading" class="mt-2 text-sm text-ink-light">Uploading...</p>
+        <p v-if="coverError" class="mt-2 text-sm text-red-600">{{ coverError }}</p>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.prose-serif :deep(.tiptap) {
+  font-family: var(--font-serif);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: #242424;
+  min-height: 200px;
+  outline: none;
+}
+
+.prose-serif :deep(.tiptap p) {
+  margin: 0.75em 0;
+}
+</style>
+
