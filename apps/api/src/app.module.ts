@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { TagsModule } from './tags/tags.module';
 import { ArticlesModule } from './articles/articles.module';
 import { FeedModule } from './feed/feed.module';
+import { SearchModule } from './search/search.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { FeedModule } from './feed/feed.module';
     TagsModule,
     ArticlesModule,
     FeedModule,
+    SearchModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
