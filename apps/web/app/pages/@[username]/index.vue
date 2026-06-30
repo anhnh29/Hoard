@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PublicProfile } from '@hoard/shared';
 import Avatar from '~/components/ui/Avatar.vue';
+import FollowButton from '~/components/ui/FollowButton.vue';
 
 const route = useRoute();
 const config = useRuntimeConfig();
@@ -20,10 +21,15 @@ const isOwnProfile = computed(() => auth.user?.username === username);
       <h1 class="font-serif text-3xl font-bold text-ink">{{ data.name }}</h1>
       <p class="text-ink-light">@{{ data.username }}</p>
       <p v-if="data.bio" class="text-ink">{{ data.bio }}</p>
-      <div v-if="isOwnProfile" class="pt-4">
-        <NuxtLink to="/settings/profile" class="text-sm font-semibold text-ink-light transition-colors hover:text-ink">
+      <div class="flex items-center justify-center gap-4 pt-4">
+        <NuxtLink
+          v-if="isOwnProfile"
+          to="/settings/profile"
+          class="text-sm font-semibold text-ink-light transition-colors hover:text-ink"
+        >
           Edit profile
         </NuxtLink>
+        <FollowButton v-else :username="username" />
       </div>
     </div>
   </div>

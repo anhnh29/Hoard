@@ -4,6 +4,9 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
 import type { PublicArticle } from '@hoard/shared';
+import ClapButton from '~/components/ui/ClapButton.vue';
+import BookmarkButton from '~/components/ui/BookmarkButton.vue';
+import CommentThread from '~/components/ui/CommentThread.vue';
 
 const route = useRoute();
 const config = useRuntimeConfig();
@@ -41,10 +44,18 @@ const contentHtml = computed(() =>
           {{ tag.name }}
         </NuxtLink>
       </p>
+
+      <div class="mt-6 flex items-center justify-between">
+        <ClapButton :slug="data.slug" />
+        <BookmarkButton :slug="data.slug" />
+      </div>
+
       <!-- safe: generateHTML only emits markup for the node/mark types declared
            in the extensions array above — it cannot emit arbitrary tags, since
            the input is our own Tiptap JSON, not raw user-supplied HTML. -->
       <div class="prose-serif mt-8" v-html="contentHtml" />
+
+      <CommentThread :slug="data.slug" />
     </article>
   </div>
 </template>
@@ -58,22 +69,57 @@ const contentHtml = computed(() =>
 }
 
 .prose-serif :deep(p) {
-  margin: 1em 0;
+  margin-bottom: 1.25em;
 }
 
-.prose-serif :deep(h2) {
+.prose-serif :deep(h1),
+.prose-serif :deep(h2),
+.prose-serif :deep(h3) {
+  font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 1.5rem;
   margin: 1.5em 0 0.5em;
 }
 
-.prose-serif :deep(a) {
-  color: #1a8917;
-  text-decoration: underline;
+.prose-serif :deep(blockquote) {
+  border-left: 3px solid #e5e7eb;
+  padding-left: 1rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.prose-serif :deep(code) {
+  background: #f3f4f6;
+  padding: 0.125rem 0.375rem;
+  border-radius: 4px;
+  font-size: 0.875em;
+}
+
+.prose-serif :deep(pre) {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+.prose-serif :deep(pre code) {
+  background: none;
+  padding: 0;
 }
 
 .prose-serif :deep(img) {
   max-width: 100%;
   border-radius: 6px;
+  margin: 1.5rem auto;
+}
+
+.prose-serif :deep(ul),
+.prose-serif :deep(ol) {
+  padding-left: 1.5rem;
+  margin-bottom: 1.25em;
+}
+
+.prose-serif :deep(a) {
+  text-decoration: underline;
 }
 </style>
