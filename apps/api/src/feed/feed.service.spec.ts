@@ -71,4 +71,23 @@ describe('FeedService', () => {
       expect.objectContaining({ where: { status: 'PUBLISHED' } }),
     );
   });
+
+  it('caps effective limit at MAX_LIMIT when limit exceeds it', async () => {
+    // With limit=25 (above MAX_LIMIT=20): take=21, should detect hasNext correctly
+    const articles = Array.from({ length: 21 }, (_, i) =>
+      makeArticle(new Date(`2024-01-${String(21 - i).padStart(2, '0')}T00:00:00.000Z`), `a${i}`),
+    );
+    prismaMock.article.findMany.mockResolvedValue(articles);
+    const result = await service.findPage(undefined, 25);
+    expect(result.articles).toHaveLength(20);
+    expect(result.nextCursor).not.toBeNull();
+  });
+
+  it('falls back to DEFAULT_LIMIT when limit is NaN', async () => {
+    prismaMock.article.findMany.mockResolvedValue([]);
+    await service.findPage(undefined, NaN);
+    expect(prismaMock.article.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ take: 11 }), // DEFAULT_LIMIT (10) + 1
+    );
+  });
 });
