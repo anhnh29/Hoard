@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@hoard/shared": "workspace:*",
-    "@nuxt/fonts": "^0.11.4",
     "@pinia/nuxt": "^0.11.3",
     "@tailwindcss/vite": "^4.1.18",
     "@tiptap/extension-image": "^2.27.2",
