@@ -3,6 +3,10 @@ import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { updateProfileSchema } from '@hoard/shared';
 import type { PublicProfile } from '@hoard/shared';
+import Avatar from '~/components/ui/Avatar.vue';
+import Button from '~/components/ui/Button.vue';
+import Input from '~/components/ui/Input.vue';
+import Textarea from '~/components/ui/Textarea.vue';
 
 interface SignedUploadParams {
   timestamp: number;
@@ -107,30 +111,35 @@ async function logout() {
 </script>
 
 <template>
-  <div>
-    <h2>Avatar</h2>
-    <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar preview" width="96" height="96" />
-    <input type="file" accept="image/*" :disabled="avatarUploading" @change="onAvatarSelected" />
-    <p v-if="avatarUploading">Uploading...</p>
-    <p v-if="avatarError">{{ avatarError }}</p>
+  <div class="mx-auto max-w-sm px-6 py-16">
+    <h1 class="font-serif text-3xl font-bold text-ink">Edit profile</h1>
+
+    <div class="mt-6 flex items-center gap-4">
+      <Avatar :src="avatarUrl" :name="auth.user?.name ?? ''" :size="64" />
+      <div>
+        <input type="file" accept="image/*" :disabled="avatarUploading" class="text-sm" @change="onAvatarSelected" />
+        <p v-if="avatarUploading" class="text-sm text-ink-light">Uploading...</p>
+        <p v-if="avatarError" class="text-sm text-red-600">{{ avatarError }}</p>
+      </div>
+    </div>
+
+    <form class="mt-6 space-y-4" @submit="onSubmit">
+      <div>
+        <label class="block text-sm font-medium text-ink">Name</label>
+        <Input v-model="name" type="text" class="mt-1" />
+        <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-ink">Bio</label>
+        <Textarea v-model="bio" class="mt-1" />
+        <p v-if="errors.bio" class="mt-1 text-sm text-red-600">{{ errors.bio }}</p>
+      </div>
+
+      <p v-if="submitError" class="text-sm text-red-600">{{ submitError }}</p>
+      <Button type="submit" class="w-full">Save</Button>
+    </form>
+
+    <Button variant="text" class="mt-4" @click="logout">Log out</Button>
   </div>
-
-  <form @submit="onSubmit">
-    <h1>Edit profile</h1>
-    <label>
-      Name
-      <input v-model="name" type="text" />
-    </label>
-    <p v-if="errors.name">{{ errors.name }}</p>
-
-    <label>
-      Bio
-      <textarea v-model="bio"></textarea>
-    </label>
-    <p v-if="errors.bio">{{ errors.bio }}</p>
-
-    <p v-if="submitError">{{ submitError }}</p>
-    <button type="submit">Save</button>
-  </form>
-  <button type="button" @click="logout">Log out</button>
 </template>

@@ -23,6 +23,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <p v-if="errorMessage">{{ errorMessage }}</p>
-  <p v-else>Signing you in...</p>
+  <div class="mx-auto max-w-sm px-6 py-24 text-center">
+    <p v-if="errorMessage" class="text-sm text-red-600">{{ errorMessage }}</p>
+    <p v-else class="text-sm text-ink-light">Signing you in...</p>
+  </div>
 </template>
