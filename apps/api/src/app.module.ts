@@ -14,6 +14,7 @@ import { SearchModule } from './search/search.module';
 import { FollowsModule } from './follows/follows.module';
 import { ClapsModule } from './claps/claps.module';
 import { CommentsModule } from './comments/comments.module';
+import { BookmarksModule } from './bookmarks/bookmarks.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CommentsModule } from './comments/comments.module';
     FollowsModule,
     ClapsModule,
     CommentsModule,
+    BookmarksModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
