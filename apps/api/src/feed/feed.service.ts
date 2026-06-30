@@ -33,4 +33,32 @@ export class FeedService {
       nextCursor: hasNext ? (page[page.length - 1].publishedAt as Date).toISOString() : null,
     };
   }
+
+  async findFollowingPage(userId: string, cursor?: string, limit = DEFAULT_LIMIT): Promise<PaginatedArticles> {
+    const follows = await this.prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    });
+    if (follows.length === 0) return this.findPage(cursor, limit);
+
+    const followingIds = follows.map((f) => f.followingId);
+    const effectiveLimit = Math.min(Number.isFinite(limit) ? limit : DEFAULT_LIMIT, MAX_LIMIT);
+    const take = effectiveLimit + 1;
+    const articles = await this.prisma.article.findMany({
+      where: {
+        status: 'PUBLISHED',
+        authorId: { in: followingIds },
+        ...(cursor ? { publishedAt: { lt: new Date(cursor) } } : {}),
+      },
+      orderBy: { publishedAt: 'desc' },
+      take,
+      include: ARTICLE_WITH_AUTHOR_INCLUDE,
+    });
+    const hasNext = articles.length > effectiveLimit;
+    const page = hasNext ? articles.slice(0, effectiveLimit) : articles;
+    return {
+      articles: page.map((a) => toArticleListItem(a as ArticleWithTagsAndAuthor)),
+      nextCursor: hasNext ? (page[page.length - 1].publishedAt as Date).toISOString() : null,
+    };
+  }
 }

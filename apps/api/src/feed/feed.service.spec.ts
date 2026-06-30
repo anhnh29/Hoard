@@ -91,3 +91,40 @@ describe('FeedService', () => {
     );
   });
 });
+
+describe('FeedService.findFollowingPage', () => {
+  let service: FeedService;
+  const prismaMock = {
+    follow: { findMany: jest.fn() },
+    article: { findMany: jest.fn() },
+  };
+
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [FeedService, { provide: PrismaService, useValue: prismaMock }],
+    }).compile();
+    service = module.get<FeedService>(FeedService);
+  });
+
+  it('falls back to findPage (Explore) when user follows nobody', async () => {
+    prismaMock.follow.findMany.mockResolvedValue([]);
+    prismaMock.article.findMany.mockResolvedValue([]);
+    const result = await service.findFollowingPage('u1');
+    expect(result).toEqual({ articles: [], nextCursor: null });
+    expect(prismaMock.article.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { status: 'PUBLISHED' } }),
+    );
+  });
+
+  it('filters by followed author IDs when user has follows', async () => {
+    prismaMock.follow.findMany.mockResolvedValue([{ followingId: 'u2' }, { followingId: 'u3' }]);
+    prismaMock.article.findMany.mockResolvedValue([]);
+    await service.findFollowingPage('u1');
+    expect(prismaMock.article.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ authorId: { in: ['u2', 'u3'] } }),
+      }),
+    );
+  });
+});
