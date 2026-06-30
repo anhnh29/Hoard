@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TagsModule } from './tags/tags.module';
 import { ArticlesModule } from './articles/articles.module';
+import { FeedModule } from './feed/feed.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ArticlesModule } from './articles/articles.module';
     AuthModule,
     TagsModule,
     ArticlesModule,
+    FeedModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

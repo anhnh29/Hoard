@@ -53,6 +53,11 @@ export interface ArticleListItem {
   author: ArticleAuthor;
 }
 
+export interface PaginatedArticles {
+  articles: ArticleListItem[];
+  nextCursor: string | null;
+}
+
 export interface TagWithArticles {
   tag: TagSummary;
   articles: ArticleListItem[];
