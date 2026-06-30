@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ArticleListItem } from '@hoard/shared';
 import Avatar from '~/components/ui/Avatar.vue';
+import BookmarkButton from '~/components/ui/BookmarkButton.vue';
 
 defineProps<{ article: ArticleListItem }>();
 </script>
@@ -20,9 +21,12 @@ defineProps<{ article: ArticleListItem }>();
           {{ article.excerpt }}
         </p>
       </NuxtLink>
-      <p class="mt-3 text-xs text-ink-light">
-        {{ article.readingTime }} min read · {{ new Date(article.publishedAt).toLocaleDateString() }}
-      </p>
+      <div class="mt-3 flex items-center gap-4">
+        <p class="text-xs text-ink-light">
+          {{ article.readingTime }} min read · {{ new Date(article.publishedAt).toLocaleDateString() }}
+        </p>
+        <BookmarkButton :slug="article.slug" />
+      </div>
     </div>
     <img
       v-if="article.coverImageUrl"

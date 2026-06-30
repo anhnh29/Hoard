@@ -16,11 +16,13 @@ const article: ArticleListItem = {
   author: { username: 'hoang', name: 'Hoang Anh', avatarUrl: null },
 };
 
+const globalStubs = { NuxtLink: RouterLinkStub, BookmarkButton: true };
+
 describe('ArticleCard', () => {
   it('renders the title, excerpt, author name, and reading time', () => {
     const wrapper = mount(ArticleCard, {
       props: { article },
-      global: { stubs: { NuxtLink: RouterLinkStub } },
+      global: { stubs: globalStubs },
     });
     expect(wrapper.text()).toContain('Designing a reading experience');
     expect(wrapper.text()).toContain('A few notes on typography.');
@@ -31,7 +33,7 @@ describe('ArticleCard', () => {
   it('does not render a thumbnail when coverImageUrl is null', () => {
     const wrapper = mount(ArticleCard, {
       props: { article },
-      global: { stubs: { NuxtLink: RouterLinkStub } },
+      global: { stubs: globalStubs },
     });
     expect(wrapper.find('img').exists()).toBe(false);
   });
@@ -39,7 +41,7 @@ describe('ArticleCard', () => {
   it('renders a thumbnail when coverImageUrl is set', () => {
     const wrapper = mount(ArticleCard, {
       props: { article: { ...article, coverImageUrl: 'https://example.com/cover.jpg' } },
-      global: { stubs: { NuxtLink: RouterLinkStub } },
+      global: { stubs: globalStubs },
     });
     expect(wrapper.find('img').attributes('src')).toBe('https://example.com/cover.jpg');
   });
