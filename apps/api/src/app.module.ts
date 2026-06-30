@@ -13,6 +13,7 @@ import { FeedModule } from './feed/feed.module';
 import { SearchModule } from './search/search.module';
 import { FollowsModule } from './follows/follows.module';
 import { ClapsModule } from './claps/claps.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ClapsModule } from './claps/claps.module';
     SearchModule,
     FollowsModule,
     ClapsModule,
+    CommentsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [AppService, { provide: APP_GUARD, useClass: ThrottlerGuard }],
