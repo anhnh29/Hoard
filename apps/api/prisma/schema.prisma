@@ -18,6 +18,11 @@ model User {
   hashedRefreshToken String?
   createdAt          DateTime @default(now())
   articles           Article[]
+  following          Follow[]   @relation("Following")
+  followers          Follow[]   @relation("Followers")
+  claps              Clap[]
+  comments           Comment[]
+  bookmarks          Bookmark[]
 }
 
 enum ArticleStatus {
@@ -38,6 +43,9 @@ model Article {
   publishedAt   DateTime?
   readingTime   Int           @default(1)
   tags          ArticleTag[]
+  claps          Clap[]
+  comments       Comment[]
+  bookmarks      Bookmark[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -56,4 +64,51 @@ model ArticleTag {
   tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([articleId, tagId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  follower    User     @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followerId  String
+  following   User     @relation("Followers", fields: [followingId], references: [id], onDelete: Cascade)
+  followingId String
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Clap {
+  id        String  @id @default(uuid())
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String
+  count     Int     @default(0)
+
+  @@unique([userId, articleId])
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  content   String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  article   Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String
+  parent    Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  String?
+  replies   Comment[] @relation("Replies")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Bookmark {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  articleId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, articleId])
 }
