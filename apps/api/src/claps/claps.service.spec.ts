@@ -12,12 +12,14 @@ describe('ClapsService', () => {
       findUnique: jest.fn(),
       upsert: jest.fn(),
     },
+    $transaction: jest.fn(),
   };
 
-  const article = { id: 'art1' };
+  const article = { id: 'art1', status: 'PUBLISHED' };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    prismaMock.$transaction.mockImplementation((fn: (tx: typeof prismaMock) => Promise<unknown>) => fn(prismaMock));
     const module: TestingModule = await Test.createTestingModule({
       providers: [ClapsService, { provide: PrismaService, useValue: prismaMock }],
     }).compile();
@@ -67,5 +69,16 @@ describe('ClapsService', () => {
     prismaMock.clap.findUnique.mockResolvedValue({ count: 10 });
     await expect(service.clap('my-article', 'u1')).rejects.toThrow(BadRequestException);
     expect(prismaMock.clap.upsert).not.toHaveBeenCalled();
+  });
+
+  it('getStatus throws NotFoundException for unpublished article', async () => {
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', status: 'DRAFT' });
+    await expect(service.getStatus('draft-article')).rejects.toThrow(NotFoundException);
+  });
+
+  it('clap throws NotFoundException for unpublished article', async () => {
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', status: 'DRAFT' });
+    await expect(service.clap('draft-article', 'u1')).rejects.toThrow(NotFoundException);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 });

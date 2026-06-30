@@ -10,7 +10,7 @@ export class ClapsService {
 
   async getStatus(slug: string, userId?: string): Promise<ClapStatus> {
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED') throw new NotFoundException('Article not found');
 
     const agg = await this.prisma.clap.aggregate({
       where: { articleId: article.id },
@@ -31,19 +31,20 @@ export class ClapsService {
 
   async clap(slug: string, userId: string): Promise<ClapStatus> {
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED') throw new NotFoundException('Article not found');
 
-    const existing = await this.prisma.clap.findUnique({
-      where: { userId_articleId: { userId, articleId: article.id } },
-    });
-    if ((existing?.count ?? 0) >= CLAP_CAP) {
-      throw new BadRequestException(`Clap limit of ${CLAP_CAP} reached`);
-    }
-
-    await this.prisma.clap.upsert({
-      where: { userId_articleId: { userId, articleId: article.id } },
-      create: { userId, articleId: article.id, count: 1 },
-      update: { count: { increment: 1 } },
+    await this.prisma.$transaction(async (tx) => {
+      const existing = await tx.clap.findUnique({
+        where: { userId_articleId: { userId, articleId: article.id } },
+      });
+      if ((existing?.count ?? 0) >= CLAP_CAP) {
+        throw new BadRequestException(`Clap limit of ${CLAP_CAP} reached`);
+      }
+      await tx.clap.upsert({
+        where: { userId_articleId: { userId, articleId: article.id } },
+        create: { userId, articleId: article.id, count: 1 },
+        update: { count: { increment: 1 } },
+      });
     });
 
     return this.getStatus(slug, userId);

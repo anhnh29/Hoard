@@ -16,7 +16,8 @@ export class BookmarksService {
 
   async bookmark(slug: string, userId: string): Promise<BookmarkStatus> {
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED')
+      throw new NotFoundException('Article not found');
     await this.prisma.bookmark.upsert({
       where: { userId_articleId: { userId, articleId: article.id } },
       create: { userId, articleId: article.id },
@@ -27,13 +28,15 @@ export class BookmarksService {
 
   async unbookmark(slug: string, userId: string): Promise<void> {
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED')
+      throw new NotFoundException('Article not found');
     await this.prisma.bookmark.deleteMany({ where: { userId, articleId: article.id } });
   }
 
   async getStatus(slug: string, userId: string): Promise<BookmarkStatus> {
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED')
+      throw new NotFoundException('Article not found');
     const record = await this.prisma.bookmark.findUnique({
       where: { userId_articleId: { userId, articleId: article.id } },
     });

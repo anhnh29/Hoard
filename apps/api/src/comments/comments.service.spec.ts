@@ -23,7 +23,7 @@ describe('CommentsService', () => {
     comment: { findMany: jest.fn(), create: jest.fn(), findUnique: jest.fn(), delete: jest.fn() },
   };
 
-  const article = { id: 'art1', slug: 'my-article' };
+  const article = { id: 'art1', slug: 'my-article', status: 'PUBLISHED' };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -86,5 +86,15 @@ describe('CommentsService', () => {
   it('delete throws ForbiddenException when deleting another user comment', async () => {
     prismaMock.comment.findUnique.mockResolvedValue(makeComment({ authorId: 'u2' }));
     await expect(service.delete('c1', 'u1')).rejects.toThrow(ForbiddenException);
+  });
+
+  it('findAll throws NotFoundException for unpublished article', async () => {
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', slug: 'draft', status: 'DRAFT' });
+    await expect(service.findAll('draft')).rejects.toThrow(NotFoundException);
+  });
+
+  it('create throws NotFoundException for unpublished article', async () => {
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', slug: 'draft', status: 'DRAFT' });
+    await expect(service.create('draft', 'u1', 'Hello')).rejects.toThrow(NotFoundException);
   });
 });

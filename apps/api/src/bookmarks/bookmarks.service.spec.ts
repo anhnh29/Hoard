@@ -31,7 +31,7 @@ describe('BookmarksService', () => {
   });
 
   it('bookmark upserts and returns isBookmarked: true', async () => {
-    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1' });
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', status: 'PUBLISHED' });
     prismaMock.bookmark.upsert.mockResolvedValue({});
     const result = await service.bookmark('my-article', 'u1');
     expect(prismaMock.bookmark.upsert).toHaveBeenCalled();
@@ -44,7 +44,7 @@ describe('BookmarksService', () => {
   });
 
   it('unbookmark calls deleteMany', async () => {
-    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1' });
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', status: 'PUBLISHED' });
     prismaMock.bookmark.deleteMany.mockResolvedValue({ count: 1 });
     await service.unbookmark('my-article', 'u1');
     expect(prismaMock.bookmark.deleteMany).toHaveBeenCalledWith({
@@ -53,10 +53,15 @@ describe('BookmarksService', () => {
   });
 
   it('getStatus returns isBookmarked: true when record exists', async () => {
-    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1' });
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', status: 'PUBLISHED' });
     prismaMock.bookmark.findUnique.mockResolvedValue({ id: 'bm1' });
     const result = await service.getStatus('my-article', 'u1');
     expect(result).toEqual({ isBookmarked: true });
+  });
+
+  it('bookmark throws NotFoundException for unpublished article', async () => {
+    prismaMock.article.findUnique.mockResolvedValue({ id: 'art1', status: 'DRAFT' });
+    await expect(service.bookmark('draft', 'u1')).rejects.toThrow(NotFoundException);
   });
 
   it('getReadingList returns PaginatedArticles ordered by bookmark createdAt DESC', async () => {

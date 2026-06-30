@@ -9,6 +9,7 @@ const { public: { apiBase } } = useRuntimeConfig();
 
 const comments = ref<CommentItem[]>([]);
 const loading = ref(false);
+const error = ref<string | null>(null);
 const newComment = ref('');
 const submitting = ref(false);
 const replyingTo = ref<string | null>(null);
@@ -16,8 +17,11 @@ const replyContent = ref('');
 
 async function fetchComments() {
   loading.value = true;
+  error.value = null;
   try {
     comments.value = await $fetch<CommentItem[]>(`${apiBase}/articles/${props.slug}/comments`);
+  } catch {
+    error.value = 'Failed to load responses.';
   } finally {
     loading.value = false;
   }
@@ -96,6 +100,7 @@ onMounted(fetchComments);
       </div>
     </div>
 
+    <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
     <p v-if="loading" class="text-sm text-ink-light">Loading responses...</p>
     <p v-else-if="comments.length === 0" class="text-sm text-ink-light">No responses yet.</p>
 

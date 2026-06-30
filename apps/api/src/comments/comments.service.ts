@@ -37,7 +37,7 @@ export class CommentsService {
 
   async findAll(slug: string): Promise<CommentItem[]> {
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED') throw new NotFoundException('Article not found');
     const comments = await this.prisma.comment.findMany({
       where: { articleId: article.id, parentId: null },
       include: COMMENT_INCLUDE,
@@ -49,7 +49,7 @@ export class CommentsService {
   async create(slug: string, authorId: string, content: string): Promise<CommentItem> {
     if (!content.trim()) throw new BadRequestException('Comment cannot be empty');
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED') throw new NotFoundException('Article not found');
     const comment = await this.prisma.comment.create({
       data: { content: content.trim(), authorId, articleId: article.id, parentId: null },
       include: COMMENT_INCLUDE,
@@ -60,7 +60,7 @@ export class CommentsService {
   async createReply(slug: string, parentId: string, authorId: string, content: string): Promise<CommentItem> {
     if (!content.trim()) throw new BadRequestException('Comment cannot be empty');
     const article = await this.prisma.article.findUnique({ where: { slug } });
-    if (!article) throw new NotFoundException('Article not found');
+    if (!article || article.status !== 'PUBLISHED') throw new NotFoundException('Article not found');
     const parent = await this.prisma.comment.findUnique({ where: { id: parentId } });
     if (!parent) throw new NotFoundException('Comment not found');
     if (parent.parentId !== null) throw new BadRequestException('Cannot reply to a reply');
