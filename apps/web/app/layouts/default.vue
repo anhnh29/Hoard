@@ -2,6 +2,7 @@
 import Avatar from '~/components/ui/Avatar.vue';
 
 const auth = useAuthStore();
+const searchQuery = ref('');
 </script>
 
 <template>
@@ -10,6 +11,16 @@ const auth = useAuthStore();
       <div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <NuxtLink to="/" class="font-serif text-2xl font-bold text-ink">Hoard</NuxtLink>
         <div class="flex items-center gap-5 text-sm font-medium">
+          <form
+            @submit.prevent="searchQuery.trim() && navigateTo(`/search?q=${encodeURIComponent(searchQuery.trim())}`)"
+          >
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search..."
+              class="w-40 rounded-full border border-border px-3 py-1 text-sm text-ink placeholder:text-ink-light focus:border-accent focus:outline-none"
+            />
+          </form>
           <template v-if="auth.user">
             <NuxtLink to="/write" class="flex items-center gap-1.5 text-ink hover:text-accent">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
