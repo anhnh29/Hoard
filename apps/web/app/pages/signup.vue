@@ -3,6 +3,8 @@ import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import { signupSchema } from '@hoard/shared';
 import type { AuthUser } from '@hoard/shared';
+import Button from '~/components/ui/Button.vue';
+import Input from '~/components/ui/Input.vue';
 
 const { defineField, handleSubmit, errors } = useForm({
   validationSchema: toTypedSchema(signupSchema),
@@ -34,34 +36,41 @@ const onSubmit = handleSubmit(async (values) => {
 </script>
 
 <template>
-  <form @submit="onSubmit">
-    <h1>Sign up</h1>
-    <label>
-      Email
-      <input v-model="email" type="email" />
-    </label>
-    <p v-if="errors.email">{{ errors.email }}</p>
+  <div class="mx-auto max-w-sm px-6 py-16">
+    <h1 class="font-serif text-3xl font-bold text-ink">Sign up</h1>
+    <form class="mt-6 space-y-4" @submit="onSubmit">
+      <div>
+        <label class="block text-sm font-medium text-ink">Email</label>
+        <Input v-model="email" type="email" class="mt-1" />
+        <p v-if="errors.email" class="mt-1 text-sm text-red-600">{{ errors.email }}</p>
+      </div>
 
-    <label>
-      Password
-      <input v-model="password" type="password" />
-    </label>
-    <p v-if="errors.password">{{ errors.password }}</p>
+      <div>
+        <label class="block text-sm font-medium text-ink">Password</label>
+        <Input v-model="password" type="password" class="mt-1" />
+        <p v-if="errors.password" class="mt-1 text-sm text-red-600">{{ errors.password }}</p>
+      </div>
 
-    <label>
-      Name
-      <input v-model="name" type="text" />
-    </label>
-    <p v-if="errors.name">{{ errors.name }}</p>
+      <div>
+        <label class="block text-sm font-medium text-ink">Name</label>
+        <Input v-model="name" type="text" class="mt-1" />
+        <p v-if="errors.name" class="mt-1 text-sm text-red-600">{{ errors.name }}</p>
+      </div>
 
-    <label>
-      Username
-      <input v-model="username" type="text" />
-    </label>
-    <p v-if="errors.username">{{ errors.username }}</p>
+      <div>
+        <label class="block text-sm font-medium text-ink">Username</label>
+        <Input v-model="username" type="text" class="mt-1" />
+        <p v-if="errors.username" class="mt-1 text-sm text-red-600">{{ errors.username }}</p>
+      </div>
 
-    <p v-if="submitError">{{ submitError }}</p>
-    <button type="submit">Create account</button>
-  </form>
-  <a :href="`${config.public.apiBase}/auth/google`">Continue with Google</a>
+      <p v-if="submitError" class="text-sm text-red-600">{{ submitError }}</p>
+      <Button type="submit" class="w-full">Create account</Button>
+    </form>
+    <a
+      :href="`${config.public.apiBase}/auth/google`"
+      class="mt-4 block rounded-full border border-ink px-4 py-2 text-center text-sm font-semibold text-ink hover:bg-neutral-50"
+    >
+      Continue with Google
+    </a>
+  </div>
 </template>
